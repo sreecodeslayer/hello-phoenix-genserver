@@ -6,8 +6,17 @@ defmodule HelloGenserver.Application do
   use Application
 
   def start(_type, _args) do
+    # Libcluster configuration
+    topologies = [
+      chat: [
+        strategy: Cluster.Strategy.Gossip
+      ]
+    ]
+
     # List all child processes to be supervised
     children = [
+      # Start the cluster supervisor
+      {Cluster.Supervisor, [topologies, [name: HelloGenserver.ClusterSupervisor]]},
       # Start the endpoint when the application starts
       HelloGenserverWeb.Endpoint,
       # Starts a worker by calling: HelloGenserver.Worker.start_link(arg)
