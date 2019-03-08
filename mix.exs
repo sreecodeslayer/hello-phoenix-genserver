@@ -37,7 +37,8 @@ defmodule HelloGenserver.MixProject do
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
       {:plug_cowboy, "~> 2.0"},
-      {:libcluster, "~> 3.0.3"}
+      {:libcluster, "~> 3.0.3"},
+      {:swarm, "~> 3.4.0"}
     ]
   end
 end
