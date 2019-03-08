@@ -9,9 +9,9 @@ defmodule HelloGenserver.Application do
     # List all child processes to be supervised
     children = [
       # Start the endpoint when the application starts
-      HelloGenserverWeb.Endpoint
+      HelloGenserverWeb.Endpoint,
       # Starts a worker by calling: HelloGenserver.Worker.start_link(arg)
-      # {HelloGenserver.Worker, arg},
+      HelloGenserver.Worker
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
