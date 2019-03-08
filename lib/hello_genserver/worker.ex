@@ -33,5 +33,6 @@ defmodule HelloGenserver.Worker do
 
   defp whereami do
     Logger.info("GenServer is now running on: #{Node.self()}")
+    Logger.info("Am also connected now to dudes => #{inspect(Node.list())}")
   end
 end
