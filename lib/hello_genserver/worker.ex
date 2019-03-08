@@ -1,5 +1,6 @@
 defmodule HelloGenserver.Worker do
   use GenServer
+  require Logger
 
   def start_link(_) do
     GenServer.start_link(__MODULE__, %{})
@@ -8,6 +9,7 @@ defmodule HelloGenserver.Worker do
   @impl true
   def init(state) do
     # Schedule work to be performed on start
+
     schedule_work()
 
     {:ok, state}
@@ -17,8 +19,6 @@ defmodule HelloGenserver.Worker do
   def handle_info(:work, state) do
     # Do the desired work here
     # Print out the node IP here
-    IO.puts("GenServer is now running on: ")
-    IO.inspect(Node.self())
     # Reschedule once more
     schedule_work()
 
@@ -26,7 +26,12 @@ defmodule HelloGenserver.Worker do
   end
 
   defp schedule_work do
-    # In 2 minute
-    Process.send_after(self(), :work, 2 * 60 * 1000)
+    # In 30 seconds
+    whereami()
+    Process.send_after(self(), :work, 30 * 1000)
+  end
+
+  defp whereami do
+    Logger.info("GenServer is now running on: #{Node.self()}")
   end
 end
