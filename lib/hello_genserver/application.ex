@@ -13,15 +13,13 @@ defmodule HelloGenserver.Application do
     children =
       [
         # Start the endpoint when the application starts
-        HelloGenserverWeb.Endpoint,
-        # Starts a worker by calling: HelloGenserver.Worker.start_link(arg)
-        HelloGenserver.Worker
+        HelloGenserverWeb.Endpoint
       ]
       |> register_or_skip
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
-    opts = [strategy: :one_for_one, name: HelloGenserver.Supervisor]
+    opts = [strategy: :one_for_one, name: HelloGenserver.Spv]
     Supervisor.start_link(children, opts)
   end
 
@@ -34,8 +32,9 @@ defmodule HelloGenserver.Application do
 
   defp register_or_skip(children) do
     # Libcluster configuration
+
     topologies = [
-      chat: [
+      nodes: [
         strategy: Cluster.Strategy.Gossip
       ]
     ]
@@ -47,12 +46,19 @@ defmodule HelloGenserver.Application do
 
       :undefined ->
         Logger.info("No GenServer found in registry, making one")
-        {:ok, pid} = Swarm.register_name(@name, HelloGenserver.Worker, :register, [@name])
 
-        children = [
-          # Start the cluster supervisor
-          {Cluster.Supervisor, [topologies, [name: HelloGenserver.ClusterSupervisor]]} | children
-        ]
+        case Swarm.register_name(@name, HelloGenserver.Supervisor, :register, [@name]) do
+          {:ok, _pid} ->
+            [
+              # Start the cluster supervisor
+              {Cluster.Supervisor, [topologies, [name: HelloGenserver.ClusterSupervisor]]}
+              | children
+            ]
+
+          {:error, reason} ->
+            Logger.error("Error registering name from Swarm: #{inspect(reason)}")
+            children
+        end
     end
   end
 end

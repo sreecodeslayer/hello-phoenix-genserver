@@ -2,8 +2,8 @@ defmodule HelloGenserver.Worker do
   use GenServer
   require Logger
 
-  def start_link(_) do
-    GenServer.start_link(__MODULE__, %{})
+  def start_link(worker_name) do
+    GenServer.start_link(__MODULE__, [worker_name])
   end
 
   @impl true
