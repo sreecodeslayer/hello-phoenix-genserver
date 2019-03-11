@@ -39,26 +39,20 @@ defmodule HelloGenserver.Application do
       ]
     ]
 
-    case Swarm.whereis_name(@name) do
+    # Link supervisor
+    HelloGenserver.Supervisor.start_link()
+
+    case Swarm.whereis_or_register_name(@name, HelloGenserver.Supervisor, :register, [@name]) do
       {:ok, _pid} ->
-        Logger.info("GenServer won't be spawned here")
+        [
+          # Start the cluster supervisor
+          {Cluster.Supervisor, [topologies, [name: HelloGenserver.ClusterSupervisor]]}
+          | children
+        ]
+
+      {:error, reason} ->
+        Logger.error("Error registering name from Swarm: #{inspect(reason)}")
         children
-
-      :undefined ->
-        Logger.info("No GenServer found in registry, making one")
-
-        case Swarm.register_name(@name, HelloGenserver.Supervisor, :register, [@name]) do
-          {:ok, _pid} ->
-            [
-              # Start the cluster supervisor
-              {Cluster.Supervisor, [topologies, [name: HelloGenserver.ClusterSupervisor]]}
-              | children
-            ]
-
-          {:error, reason} ->
-            Logger.error("Error registering name from Swarm: #{inspect(reason)}")
-            children
-        end
     end
   end
 end
