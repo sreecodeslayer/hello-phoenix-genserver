@@ -9,13 +9,23 @@ defmodule HelloGenserver.Application do
   @name "hello-genserver"
 
   def start(_type, _args) do
-    # List all child processes to be supervised
-    children =
-      [
-        # Start the endpoint when the application starts
-        HelloGenserverWeb.Endpoint
+    # Libcluster configuration
+
+    topologies = [
+      nodes: [
+        strategy: Cluster.Strategy.Gossip
       ]
-      |> register_or_skip
+    ]
+
+    # List all child processes to be supervised
+    children = [
+      # Start the cluster supervisor
+      {Cluster.Supervisor, [topologies, [name: HelloGenserver.ClusterSupervisor]]},
+      # Start the endpoint when the application starts
+      HelloGenserverWeb.Endpoint
+    ]
+
+    register_or_skip()
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
@@ -30,29 +40,16 @@ defmodule HelloGenserver.Application do
     :ok
   end
 
-  defp register_or_skip(children) do
-    # Libcluster configuration
-
-    topologies = [
-      nodes: [
-        strategy: Cluster.Strategy.Gossip
-      ]
-    ]
-
+  defp register_or_skip() do
     # Link supervisor
     HelloGenserver.Supervisor.start_link()
 
     case Swarm.whereis_or_register_name(@name, HelloGenserver.Supervisor, :register, [@name]) do
       {:ok, _pid} ->
-        [
-          # Start the cluster supervisor
-          {Cluster.Supervisor, [topologies, [name: HelloGenserver.ClusterSupervisor]]}
-          | children
-        ]
+        Logger.debug("Worker registered or exists on another node")
 
       {:error, reason} ->
-        Logger.error("Error registering name from Swarm: #{inspect(reason)}")
-        children
+        Logger.warn("Error registering name from Swarm: #{inspect(reason)}")
     end
   end
 end
