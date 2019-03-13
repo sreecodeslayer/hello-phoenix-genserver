@@ -9,18 +9,10 @@ defmodule HelloGenserver.Application do
   @name "hello-genserver"
 
   def start(_type, _args) do
-    # Libcluster configuration
-
-    topologies = [
-      nodes: [
-        strategy: Cluster.Strategy.Gossip
-      ]
-    ]
-
     # List all child processes to be supervised
     children = [
       # Start the cluster supervisor
-      {Cluster.Supervisor, [topologies, [name: HelloGenserver.ClusterSupervisor]]},
+      {Cluster.Supervisor, [config_clustering(), [name: HelloGenserver.ClusterSupervisor]]},
       # Start the endpoint when the application starts
       HelloGenserverWeb.Endpoint
     ]
@@ -38,6 +30,29 @@ defmodule HelloGenserver.Application do
   def config_change(changed, _new, removed) do
     HelloGenserverWeb.Endpoint.config_change(changed, removed)
     :ok
+  end
+
+  defp config_clustering() do
+    # Libcluster configuration
+    case Mix.env() do
+      :dev ->
+        Logger.info("Clustering using Gossip")
+
+        [
+          nodes: [
+            strategy: Cluster.Strategy.Gossip
+          ]
+        ]
+
+      :prod ->
+        Logger.info("Clustering using K8s DNS")
+
+        [
+          k8s: [
+            strategy: Cluster.Strategy.Kubernetes.DNS
+          ]
+        ]
+    end
   end
 
   defp register_or_skip() do
