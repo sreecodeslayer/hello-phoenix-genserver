@@ -15,7 +15,7 @@ RUN mix local.hex --force
 # Compile the project
 RUN mix do compile
 
-# Install mix dependencies
+# Install mix dependencies - this step has to be before compilation. editing to test PR statuses API. Will do the actual fix in next commit
 RUN mix deps.get
 
 # Run server
