@@ -12,11 +12,11 @@ WORKDIR /app
 # By using --force, we don’t need to type “Y” to confirm the installation
 RUN mix local.hex --force
 
+# Install mix dependencies
+RUN mix deps.get
+
 # Compile the project
 RUN mix do compile
-
-# Install mix dependencies - this step has to be before compilation. editing to test PR statuses API. Will do the actual fix in next commit
-RUN mix deps.get
 
 # Run server
 EXPOSE 4000
